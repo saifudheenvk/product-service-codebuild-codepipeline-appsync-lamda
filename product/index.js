@@ -1,7 +1,6 @@
 const { updateProduct, getProductById, listProducts, createProduct, listTaxonomies, createTaxonomy } = require("./product");
 
 exports.handler = async (event) => {
-    console.log('event', JSON.stringify(event, null, 2));
   
     const { fieldName, arguments: args } = event;
   
