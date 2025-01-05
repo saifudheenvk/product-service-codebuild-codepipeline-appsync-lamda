@@ -277,11 +277,6 @@ Resources:
                   - logs:PutLogEvents
                   - logs:CreateLogGroup
                   - secretsmanager:GetSecretValue
-                  - cloudformation:*
-                  - appsync:*
-                  - iam:*
-                  - codebuild:*
-                  - codepipeline:*
                 Resource: '*'
 
 Outputs:
