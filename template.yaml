@@ -232,10 +232,12 @@ Resources:
                   - s3:GetObject
                   - s3:ListBucket
                   - codebuild:*
+                  - cloudformation:*
                 Resource: 
                   - !GetAtt CodeBuildProject.Arn
                   - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu/*'
                   - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu'
+                  - '*'
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -275,6 +277,7 @@ Resources:
                   - logs:PutLogEvents
                   - logs:CreateLogGroup
                   - secretsmanager:GetSecretValue
+                  - cloudformation:*
                 Resource: '*'
 
 Outputs:
