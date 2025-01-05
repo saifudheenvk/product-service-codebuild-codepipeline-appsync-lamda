@@ -281,8 +281,8 @@ Resources:
                 Resource: '*'
 
 Outputs:
-  GraphQLApiUrl:
-    Value: !GetAtt AppSyncApi.GraphQLUrl
+  AppSyncApiArn:
+    Value: !GetAtt AppSyncApi.Arn
   LambdaFunctionArn:
     Value: !GetAtt ProductLambda.Arn
   ProductTableArn:
