@@ -7,7 +7,7 @@ env:
     GITHUB_REPO: product-service-codebuild-codepipeline-appsync-lamda
     GITHUB_BRANCH: master
   secrets-manager:
-    GITHUB_TOKEN: arn:aws:secretsmanager:us-east-1:123456789012:secret:GITHUB_TOKEN-Qk0XcT
+    GITHUB_TOKEN: arn:aws:secretsmanager:us-east-1:597088052511:secret:GITHUB_TOKEN-Qk0XcT
 
 
 phases:
