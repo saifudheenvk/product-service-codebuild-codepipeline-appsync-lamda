@@ -18,7 +18,7 @@ Resources:
   ProductsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: ${Products-${Environment}}
+      TableName: !Sub Products-${Environment}
       KeySchema:
         - AttributeName: productId
           KeyType: HASH
@@ -30,11 +30,13 @@ Resources:
   TaxonomyTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: ${ProductTaxonomyAttributes-${Environment}}
+      TableName: !Sub ProductTaxonomyAttributes-${Environment}
       AttributeDefinitions:
         - AttributeName: taxonomyId
           AttributeType: S
         - AttributeName: parentId
+          AttributeType: S
+        - AttributeName: name
           AttributeType: S
       KeySchema:
         - AttributeName: taxonomyId
@@ -77,13 +79,12 @@ Resources:
     Type: AWS::AppSync::ApiKey
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
-      Expires: !Sub "{{resolve:ssm:/appsync/apiKeyExpiry}}"
 
   AppSyncSchema:
-    Type: AWS::AppSync::GraphqlSchema
+    Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
-      Definition: ./product.graphql
+      DefinitionS3Location: product.graphql
 
   ProductLambdaServiceRole:
     Type: AWS::IAM::Role
@@ -178,7 +179,7 @@ Resources:
       RoleArn: !GetAtt CodePipelineRole.Arn
       ArtifactStore:
         Type: S3
-        Location: my-pipeline-artifacts-bucket
+        Location: my-pipeline-artifacts-bucket-saifu
       Stages:
         - Name: Source
           Actions:
@@ -193,7 +194,6 @@ Resources:
                 Repo: !Ref GitHubRepo
                 Branch: !Ref GitHubBranch
                 OAuthToken: !Ref GitHubToken
-                OutputArtifactFormat: 'CODE_ZIP'
               OutputArtifacts:
                 - Name: SourceOutput
         - Name: Build
@@ -228,9 +228,14 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - s3:*
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
                   - codebuild:*
-                Resource: '*'
+                Resource: 
+                  - !GetAtt CodeBuildProject.Arn
+                  - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu/*'
+                  - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu'
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -277,5 +282,7 @@ Outputs:
     Value: !GetAtt ProductsTable.Arn
   TaxonomyTableArn:
     Value: !GetAtt TaxonomyTable.Arn
+  CodeBuildProjectArn:
+    Value: !GetAtt CodeBuildProject.Arn
   PipelineUrl:
     Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${CodePipeline}

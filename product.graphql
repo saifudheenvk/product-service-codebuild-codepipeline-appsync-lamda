@@ -2,7 +2,7 @@ type Product {
     ProductId: ID!
     Name: String!
     Description: String!
-    Price: FLOAT!
+    Price: Float!
     category: String!
     stock: Int!
     createdAt: AWSDateTime
@@ -40,13 +40,13 @@ input TaxonomyInput {
     name: String!
     description: String
     parentId: ID
-    type: Syting!
+    type: String!
 }
 
 type Query {
     getProductById(productId: ID!): Product
     listProducts: [Product]
-    listTaxonomiesByParent(parentId: ID!): [Taxonomy]
+    listTaxonomies: [Taxonomy]
 }
 
 type Mutation {
