@@ -1,0 +1,62 @@
+type Product {
+    ProductId: ID!
+    Name: String!
+    Description: String!
+    Price: FLOAT!
+    category: String!
+    stock: Int!
+    createdAt: AWSDateTime
+    updatedAt: AWSDateTime
+}
+
+type Taxonomy {
+  TaxonomyId: ID!
+  Name: String!
+  Description: String
+  ParentId: ID
+  Type: String!
+}
+
+input ProductInput {
+  productId: ID!
+  name: String!
+  description: String
+  price: Float!
+  category: String!
+  stock: Int!
+}
+
+input UpdateProductInput {
+  productId: ID!
+  name: String
+  description: String
+  price: Float
+  category: String
+  stock: Int
+}
+
+input TaxonomyInput {
+    taxonomyId: ID!
+    name: String!
+    description: String
+    parentId: ID
+    type: Syting!
+}
+
+type Query {
+    getProductById(productId: ID!): Product
+    listProducts: [Product]
+    listTaxonomiesByParent(parentId: ID!): [Taxonomy]
+}
+
+type Mutation {
+  createProduct(input: ProductInput!): Product
+  updateProduct(input: UpdateProductInput!): Product
+  deleteProduct(productId: ID!): Product
+  createTaxonomy(input: TaxonomyInput!): Taxonomy
+}
+
+schema {
+    query: Query
+    mutation: Mutation
+}

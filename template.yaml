@@ -1,0 +1,281 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+  GitHubOwner:
+    Type: String
+  GitHubRepo:
+    Type: String
+  GitHubBranch:
+    Type: String
+  GitHubToken:
+    Type: String
+
+Resources:
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${Products-${Environment}}
+      KeySchema:
+        - AttributeName: productId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: productId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+
+  TaxonomyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${ProductTaxonomyAttributes-${Environment}}
+      AttributeDefinitions:
+        - AttributeName: taxonomyId
+          AttributeType: S
+        - AttributeName: parentId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: taxonomyId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: ParentIndex
+          KeySchema:
+            - AttributeName: parentId
+              KeyType: HASH
+            - AttributeName: name
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+
+  ProductLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      CodeUri: ./product
+      FunctionName: product-lambda
+      Environment:
+        Variables:
+          PRODUCTS_TABLE: !Ref ProductsTable
+          TAXONOMY_TABLE: !Ref TaxonomyTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TaxonomyTable
+
+  AppSyncApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: ProductApi
+      AuthenticationType: API_KEY
+
+  AppsyncApiApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Expires: !Sub "{{resolve:ssm:/appsync/apiKeyExpiry}}"
+
+  AppSyncSchema:
+    Type: AWS::AppSync::GraphqlSchema
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Definition: ./product.graphql
+
+  ProductLambdaServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt ProductLambda.Arn
+
+  DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: ProductDataSource
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt ProductLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt ProductLambda.Arn
+
+  ListProductResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: listProducts
+      DataSourceName: !GetAtt DataSource.Name
+
+  GetProductByIdResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: getProductById
+      DataSourceName: !GetAtt DataSource.Name
+
+  CreateProductResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: createProduct
+      DataSourceName: !GetAtt DataSource.Name
+
+  UpdateProductResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: updateProduct
+      DataSourceName: !GetAtt DataSource.Name
+
+  DeleteProductResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: deleteProduct
+      DataSourceName: !GetAtt DataSource.Name
+
+
+  GetProductTaxonomiesResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: listTaxonomies
+      DataSourceName: !GetAtt DataSource.Name
+
+  CreateProductTaxonomyResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: createTaxonomy
+      DataSourceName: !GetAtt DataSource.Name
+
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub ProductPipeline-${Environment}
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: my-pipeline-artifacts-bucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              Configuration:
+                Owner: !Ref GitHubOwner
+                Repo: !Ref GitHubRepo
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubToken
+                OutputArtifactFormat: 'CODE_ZIP'
+              OutputArtifacts:
+                - Name: SourceOutput
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipelinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                  - codebuild:*
+                Resource: '*'
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ProductBuild-${Environment}
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:5.0
+        Type: LINUX_CONTAINER
+      Source:
+        Type: CODEPIPELINE
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                  - dynamodb:*
+                  - lambda:*
+                Resource: '*'
+
+Outputs:
+  GraphQLApiUrl:
+    Value: !GetAtt AppSyncApi.GraphQLUrl
+  LambdaFunctionArn:
+    Value: !GetAtt ProductLambda.Arn
+  ProductTableArn:
+    Value: !GetAtt ProductsTable.Arn
+  TaxonomyTableArn:
+    Value: !GetAtt TaxonomyTable.Arn
+  PipelineUrl:
+    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${CodePipeline}
