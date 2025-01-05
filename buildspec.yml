@@ -22,7 +22,7 @@ phases:
     commands:
       - echo "Deploying application..."
       - export GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id arn:aws:secretsmanager:us-east-1:597088052511:secret:GITHUB_TOKEN-Qk0XcT --query SecretString --output text)
-      - sam deploy --stack-name my-stack --capabilities CAPABILITY_IAM --region $AWS_REGION --parameter-overrides Environment=prod GitHubOwner=$GITHUB_OWNER GitHubRepo=$GITHUB_REPO GitHubBranch=$GITHUB_BRANCH GitHubToken=$GITHUB_TOKEN
+      - sam deploy --stack-name my-stack --capabilities CAPABILITY_IAM --region $AWS_REGION --parameter-overrides Environment=prod GitHubOwner=$GITHUB_OWNER GitHubRepo=$GITHUB_REPO GitHubBranch=$GITHUB_BRANCH GitHubToken=$GITHUB_TOKEN  --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-lb1lqslyylxs
 
 artifacts:
   files:
