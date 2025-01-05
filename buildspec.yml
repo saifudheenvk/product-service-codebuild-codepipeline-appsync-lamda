@@ -9,7 +9,7 @@ phases:
     commands:
       - echo "Build completed on $(date)"
       - echo Deploying Lambda function...
-      - sam deploy --no-confirm-changeset --stack-name product-service --capabilities CAPABILITY_IAM --region us-east-1
+      - sam deploy --no-confirm-changeset --stack-name product-service --capabilities CAPABILITY_IAM --region ${AWS_REGION} --parameter-overrides Environment=dev
 
 artifacts:
   files:
