@@ -278,7 +278,10 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - logs:CreateLogGroup
-                Resource: '*'
+                Resource: 
+                  - 'arn:aws:logs:us-east-1:597088052511:log-group:/aws/codebuild/*'
+                  - 'arn:aws:logs:us-east-1:597088052511:log-stream:/aws/codebuild/*'
+                  - '*'
 
 Outputs:
   GraphQLApiUrl:
