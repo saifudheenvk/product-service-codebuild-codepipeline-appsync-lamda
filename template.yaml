@@ -232,14 +232,10 @@ Resources:
                   - s3:GetObject
                   - s3:ListBucket
                   - codebuild:*
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                  - logs:CreateLogGroup
                 Resource: 
                   - !GetAtt CodeBuildProject.Arn
                   - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu/*'
                   - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu'
-                  - 'arn:aws:logs:*:*:*'
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -278,12 +274,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - logs:CreateLogGroup
-                Resource: 
-                  - 'arn:aws:logs:us-east-1:597088052511:log-group:/aws/codebuild/ProductBuild-dev'
-                  - 'arn:aws:logs:us-east-1:597088052511:log-stream:/aws/codebuild/ProductBuild-dev:log-stream:*'
-                  - 'arn:aws:logs:us-east-1:597088052511:log-group:/aws/codebuild/*'
-                  - 'arn:aws:logs:us-east-1:597088052511:log-stream:/aws/codebuild/*'
-                  - '*'
+                Resource: '*'
 
 Outputs:
   GraphQLApiUrl:
