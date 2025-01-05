@@ -278,9 +278,8 @@ Resources:
                   - logs:CreateLogGroup
                   - secretsmanager:GetSecretValue
                   - cloudformation:*
-                  - appsync:GetGraphqlApi
-                  - appsync:ListGraphqlApis
-                  - iam:GetRole
+                  - appsync:*
+                  - iam:*
                 Resource: '*'
 
 Outputs:
