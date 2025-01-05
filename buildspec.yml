@@ -1,0 +1,18 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo Packaging Lambda function...
+      - sam build
+  post_build:
+    commands:
+      - echo "Build completed on $(date)"
+      - echo Deploying Lambda function...
+      - sam deploy --no-confirm-changeset --stack-name product-service --capabilities CAPABILITY_IAM --region us-east-1
+
+artifacts:
+  files:
+    - '**/*' 
+    - '!**/tests/*'
+  discard-paths: yes
