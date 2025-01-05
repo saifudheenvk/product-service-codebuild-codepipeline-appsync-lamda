@@ -280,10 +280,8 @@ Resources:
                   - cloudformation:*
                   - appsync:*
                   - iam:*
-                  - codebuild:CreateProject
-                  - codebuild:UpdateProject
-                  - codebuild:BatchGetProjects
-                  - codebuild:StartBuild
+                  - codebuild:*
+                  - codepipeline:*
                 Resource: '*'
 
 Outputs:
