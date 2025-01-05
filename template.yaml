@@ -232,10 +232,13 @@ Resources:
                   - s3:GetObject
                   - s3:ListBucket
                   - codebuild:*
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
                 Resource: 
                   - !GetAtt CodeBuildProject.Arn
                   - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu/*'
                   - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu'
+                  - 'arn:aws:logs:*:*:*'
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
