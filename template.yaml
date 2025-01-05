@@ -234,6 +234,7 @@ Resources:
                   - codebuild:*
                   - logs:CreateLogStream
                   - logs:PutLogEvents
+                  - logs:CreateLogGroup
                 Resource: 
                   - !GetAtt CodeBuildProject.Arn
                   - 'arn:aws:s3:::my-pipeline-artifacts-bucket-saifu/*'
@@ -276,6 +277,7 @@ Resources:
                   - lambda:*
                   - logs:CreateLogStream
                   - logs:PutLogEvents
+                  - logs:CreateLogGroup
                 Resource: '*'
 
 Outputs:
