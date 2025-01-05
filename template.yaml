@@ -274,6 +274,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - logs:CreateLogGroup
+                  - secretsmanager:GetSecretValue
                 Resource: '*'
 
 Outputs:

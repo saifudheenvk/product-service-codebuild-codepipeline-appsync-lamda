@@ -1,18 +1,33 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_REGION: us-east-1
+    GITHUB_OWNER: saifudheenvk
+    GITHUB_REPO: product-service-codebuild-codepipeline-appsync-lamda
+    GITHUB_BRANCH: master
+  secrets-manager:
+    GITHUB_TOKEN: arn:aws:secretsmanager:us-east-1:123456789012:secret:GITHUB_TOKEN-Qk0XcT
+
+
 phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+    commands:
+      - echo "Installing dependencies..."
+      - npm install
   build:
     commands:
-      - echo Packaging Lambda function...
+      - echo "Building the application..."
       - sam build
   post_build:
     commands:
-      - echo "Build completed on $(date)"
-      - echo Deploying Lambda function...
-      - sam deploy --no-confirm-changeset --stack-name product-service --capabilities CAPABILITY_IAM --region ${AWS_REGION} --parameter-overrides Environment=dev
+      - echo "Deploying application..."
+      - export GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id GitHub/Token --query SecretString --output text)
+      - sam deploy --stack-name my-stack --capabilities CAPABILITY_IAM --region $AWS_REGION --parameter-overrides Environment=prod GitHubOwner=$GITHUB_OWNER GitHubRepo=$GITHUB_REPO GitHubBranch=$GITHUB_BRANCH GitHubToken=$GITHUB_TOKEN
 
 artifacts:
   files:
-    - '**/*' 
-    - '!**/tests/*'
+    - '**/*'
   discard-paths: yes
