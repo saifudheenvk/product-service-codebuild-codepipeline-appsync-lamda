@@ -93,4 +93,13 @@ const getProductById = async (productId) => {
   };
 
 
-export { updateProduct, deleteProduct, getProductById, listProducts, createProduct, listTaxonomies, createTaxonomy };
+  module.exports = {
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    getProductById,
+    listProducts,
+    listTaxonomies,
+    createTaxonomy
+  };
+  
