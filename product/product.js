@@ -1,5 +1,5 @@
-const AWS = require('aws-sdk');
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+import { DynamoDB } from 'aws-sdk';
+const dynamoDB = new DynamoDB.DocumentClient();
 
 
 const updateProduct = async (product) => {
@@ -93,7 +93,7 @@ const getProductById = async (productId) => {
   };
 
 
-  module.exports = {
+  export default {
     createProduct,
     updateProduct,
     deleteProduct,

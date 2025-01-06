@@ -1,4 +1,4 @@
-const { updateProduct, getProductById, listProducts, createProduct, listTaxonomies, createTaxonomy, deleteProduct } = require("./product");
+const { updateProduct, getProductById, listProducts, createProduct, listTaxonomies, createTaxonomy, deleteProduct } = require("./product").default;
 
 exports.handler = async (event) => {
   
